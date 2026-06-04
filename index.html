@@ -338,6 +338,7 @@ code{font-size:9px;background:var(--gray-light);padding:2px 5px;border-radius:3p
   <div class="left">
     <div><div class="slabel blogger">구글 블로거 API 연결</div>
       <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="fg"><label>Anthropic API Key <em>*</em></label><input id="a-key" type="password" placeholder="sk-ant-... (글 생성에 필요)"/></div>
         <div class="fg"><label>Blogger API Key <em>*</em></label><input id="b-key" type="password" placeholder="Google Cloud Console에서 발급"/></div>
         <div class="fg"><label>Blog ID <em>*</em></label><input id="b-id" placeholder="블로거 설정 > 기본 > Blog ID"/></div>
       </div>
@@ -421,11 +422,12 @@ document.getElementById('mOutTitle').textContent = `♡${month}월 아모레 에
 
 // ── SETTINGS ──
 let cfg = JSON.parse(localStorage.getItem('amoreV3')||'{}');
+if(cfg.apiKey) document.getElementById('a-key').value = cfg.apiKey;
 if(cfg.bkey) document.getElementById('b-key').value = cfg.bkey;
 if(cfg.bid)  document.getElementById('b-id').value  = cfg.bid;
 
 function saveSet(){
-  cfg = {bkey:document.getElementById('b-key').value.trim(), bid:document.getElementById('b-id').value.trim()};
+  cfg = {apiKey:document.getElementById('a-key').value.trim(), bkey:document.getElementById('b-key').value.trim(), bid:document.getElementById('b-id').value.trim()};
   localStorage.setItem('amoreV3', JSON.stringify(cfg));
   toast('설정 저장 완료 ✓');
 }
@@ -538,7 +540,7 @@ ${priceComp?`[가격비교정보] ${priceComp}`:''}
 반드시 JSON만: {"titles":["제목1","제목2","제목3","제목4","제목5"],"body":"본문(줄바꿈\\n, 1500자이상)","seoTags":["태그1","태그2","태그3","태그4","태그5","태그6","태그7","태그8"]}`;
 
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':cfg.apiKey||'','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
     const d=await r.json();
     const txt=d.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
     gData=JSON.parse(txt); gTitle=gData.titles[0];
@@ -593,7 +595,7 @@ async function genMonthly(){
 반드시 JSON만 응답. 다른 텍스트 없이: {"titles":["제목1","제목2","제목3"],"body":"본문(줄바꿈은 \\n 사용)","seoTags":["태그1","태그2","태그3","태그4","태그5","태그6"]}`;
 
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':cfg.apiKey||'','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
     const d=await r.json();
     let txt=d.content.map(i=>i.text||'').join('');
     // JSON 추출 강화
