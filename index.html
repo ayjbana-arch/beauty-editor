@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아모레 에디터 블로그 자동화</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --rose:#C9605A;--rose-light:#F5EDEC;--rose-dark:#9E3F3A;
+  --cream:#FAFAF7;--ink:#18160F;--gray:#7A736E;--gray-light:#EBEBEB;
+  --gold:#B89A6A;--gold-light:#F7F2EA;
+  --green:#3D6B50;--green-light:#EAF0EC;
+  --blogger:#FF6B35;--blogger-light:#FFF0EB;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+/* ── HEADER ── */
+.header{background:var(--ink);padding:18px 32px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;border-bottom:1px solid #2A2820}
+.logo{font-family:'Cormorant Garamond',serif;color:var(--rose);font-size:22px;font-weight:700;letter-spacing:.05em}
+.logo span{color:white;font-weight:400}
+.header-right{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.hbadge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.08em}
+.hb-rose{background:var(--rose);color:white}
+.hb-blogger{background:var(--blogger);color:white}
+.hb-gray{background:#2A2820;color:#888;border:1px solid #333}
+
+/* ── TABS ── */
+.tabs{background:white;border-bottom:1px solid var(--gray-light);display:flex;padding:0 32px;gap:0;overflow-x:auto}
+.tab{padding:14px 22px;font-size:12px;font-weight:500;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;letter-spacing:.05em}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--rose);border-bottom-color:var(--rose);font-weight:700}
+.tab-content{display:none}
+.tab-content.active{display:grid;grid-template-columns:360px 1fr;min-height:calc(100vh - 106px)}
+
+/* ── PANELS ── */
+.left{background:white;border-right:1px solid var(--gray-light);padding:24px 20px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;max-height:calc(100vh - 106px)}
+.right{padding:28px 36px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;max-height:calc(100vh - 106px)}
+
+/* ── FORM ── */
+.slabel{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--rose);margin-bottom:7px}
+.slabel.gold{color:var(--gold)}
+.slabel.green{color:var(--green)}
+.slabel.blogger{color:var(--blogger)}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;font-weight:500;color:var(--ink)}
+.fg label em{color:var(--rose);font-style:normal;margin-left:2px}
+.fg input,.fg select,.fg textarea{border:1.5px solid var(--gray-light);border-radius:7px;padding:8px 11px;font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--ink);background:var(--cream);outline:none;transition:border-color .2s;resize:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--rose);background:white}
+.fg textarea{height:62px}
+.fg textarea.sm{height:50px}
+.hr{height:1px;background:var(--gray-light)}
+
+/* ── TAGS ── */
+.tg{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.t{padding:4px 11px;border-radius:20px;border:1.5px solid var(--gray-light);font-size:11px;font-weight:500;cursor:pointer;color:var(--gray);transition:all .15s;user-select:none;background:white}
+.t:hover{border-color:var(--rose);color:var(--rose)}
+.t.on{background:var(--rose);border-color:var(--rose);color:white}
+
+/* ── AFFILIATE BOX ── */
+.af-box{background:var(--gold-light);border:1.5px solid #DEC99A;border-radius:10px;padding:14px 15px}
+.af-title{font-size:9px;font-weight:700;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px}
+.af-row{display:flex;gap:7px;align-items:center;margin-bottom:7px}
+.af-row:last-child{margin-bottom:0}
+.af-ico{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;color:white}
+.ico-edit{background:var(--rose)}
+.ico-oy{background:#4CAF50}
+.ico-cp{background:#E31919}
+.ico-zz{background:#FF6B9D}
+.af-row input{flex:1;border:1.5px solid #DEC99A;border-radius:6px;padding:6px 10px;font-family:'Noto Sans KR',sans-serif;font-size:11px;background:white;outline:none;color:var(--ink)}
+.af-row input:focus{border-color:var(--gold)}
+
+/* price compare */
+.price-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-top:6px}
+.price-inp{border:1.5px solid #DEC99A;border-radius:6px;padding:5px 8px;font-family:'Noto Sans KR',sans-serif;font-size:11px;background:white;outline:none;color:var(--ink);text-align:center;width:100%}
+.price-inp:focus{border-color:var(--gold)}
+.price-label{font-size:9px;color:var(--gray);text-align:center;margin-top:3px}
+
+/* ── BLOGGER BOX ── */
+.blogger-box{background:var(--blogger-light);border:1.5px solid #FFC4A8;border-radius:10px;padding:14px 15px}
+.blogger-title{font-size:9px;font-weight:700;color:var(--blogger);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px}
+.blogger-row{display:flex;gap:7px;margin-bottom:7px}
+.blogger-row input{flex:1;border:1.5px solid #FFC4A8;border-radius:6px;padding:7px 10px;font-family:'Noto Sans KR',sans-serif;font-size:11px;background:white;outline:none;color:var(--ink)}
+.blogger-row input:focus{border-color:var(--blogger)}
+.blogger-status{display:flex;align-items:center;gap:7px;padding:7px 11px;background:white;border-radius:6px;border:1px solid #FFC4A8;margin-bottom:8px;font-size:11px;color:var(--gray)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--gray-light);flex-shrink:0}
+.dot.on{background:var(--green)}
+
+/* ── BTNS ── */
+.btn{border:none;border-radius:8px;padding:11px 14px;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.03em;width:100%}
+.btn-rose{background:var(--rose);color:white;margin-top:auto}
+.btn-rose:hover{background:var(--rose-dark);transform:translateY(-1px)}
+.btn-rose:disabled{background:#bbb;cursor:not-allowed;transform:none}
+.btn-gold{background:var(--gold);color:white}
+.btn-gold:hover{background:#9A7E52;transform:translateY(-1px)}
+.btn-gold:disabled{background:#bbb;cursor:not-allowed;transform:none}
+.btn-blogger{background:var(--blogger);color:white}
+.btn-blogger:hover{background:#E5521A;transform:translateY(-1px)}
+.btn-blogger:disabled{background:#bbb;cursor:not-allowed;transform:none}
+.btn-outline{background:transparent;border:1.5px solid var(--gray-light);color:var(--gray);font-size:11px}
+.btn-outline:hover{border-color:var(--rose);color:var(--rose)}
+.btn-sm{padding:8px 14px;width:auto;font-size:11px}
+
+/* ── OUTPUT ── */
+.out-header{display:flex;align-items:center;justify-content:space-between}
+.out-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--ink)}
+.title-card{background:white;border:1.5px solid var(--gray-light);border-radius:9px;padding:11px 14px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;gap:10px;line-height:1.5;margin-bottom:7px}
+.title-card:hover,.title-card.sel{border-color:var(--rose);background:var(--rose-light)}
+.pick{font-size:9px;font-weight:700;color:var(--rose);white-space:nowrap;opacity:0;transition:opacity .2s}
+.title-card.sel .pick{opacity:1}
+.content-box{background:white;border:1.5px solid var(--gray-light);border-radius:11px;padding:24px 28px;font-size:13px;line-height:2.1;color:var(--ink);white-space:pre-wrap;min-height:300px}
+.seo-wrap{display:flex;flex-wrap:wrap;gap:5px;padding:11px 15px;background:white;border:1.5px solid var(--gray-light);border-radius:9px}
+.seo-t{font-size:11px;color:var(--gray);background:var(--gray-light);padding:3px 9px;border-radius:20px}
+.mlabel{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:7px}
+.mlabel.rose{color:var(--rose)}
+.mlabel.gold{color:var(--gold)}
+
+/* upload area */
+.upload-area{background:var(--blogger-light);border:1.5px solid #FFC4A8;border-radius:10px;padding:16px 18px;display:none}
+.upload-area.show{display:block}
+.upload-title{font-size:9px;font-weight:700;color:var(--blogger);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px}
+.upload-btn-row{display:flex;gap:7px}
+.upload-result{background:var(--green-light);border:1.5px solid var(--green);border-radius:8px;padding:11px 14px;margin-top:10px;display:none}
+.upload-result.show{display:block}
+.upload-result-title{font-size:11px;font-weight:700;color:var(--green);margin-bottom:5px}
+.upload-result a{color:var(--green);font-size:11px;text-decoration:underline}
+
+/* ── PLACEHOLDER ── */
+.ph{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:12px;color:var(--gray)}
+.ph-ico{width:52px;height:52px;background:var(--rose-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.ph p{font-size:12px;text-align:center;line-height:1.8}
+.loading{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:14px}
+.loading.on{display:flex}
+.spinner{width:36px;height:36px;border:2.5px solid var(--rose-light);border-top-color:var(--rose);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{font-size:12px;color:var(--gray);animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ── MONTHLY ── */
+.m-hero{background:linear-gradient(135deg,var(--ink) 0%,#2E2420 100%);border-radius:11px;padding:20px 22px;position:relative;overflow:hidden}
+.m-hero::before{content:'♡';position:absolute;right:16px;top:10px;font-size:64px;color:rgba(201,96,90,.12);line-height:1}
+.m-hero-month{font-size:9px;font-weight:700;letter-spacing:.2em;color:var(--rose);text-transform:uppercase;margin-bottom:5px}
+.m-hero-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:white;line-height:1.4}
+.m-hero-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:5px}
+.slot{background:white;border:1.5px solid var(--gray-light);border-radius:9px;padding:13px 14px}
+.slot-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.slot-n{width:20px;height:20px;background:var(--rose);border-radius:50%;color:white;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.rm{background:none;border:none;color:var(--gray);cursor:pointer;font-size:14px}
+.rm:hover{color:var(--rose)}
+.add-slot{background:white;border:1.5px dashed var(--gray-light);border-radius:9px;padding:11px;text-align:center;font-size:11px;color:var(--gray);cursor:pointer;transition:all .2s;width:100%}
+.add-slot:hover{border-color:var(--gold);color:var(--gold)}
+.m-out{background:white;border:1.5px solid var(--gold);border-radius:11px;padding:24px 28px}
+.m-out-hd{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;margin-bottom:3px}
+.m-out-sub{font-size:10px;color:var(--gray);margin-bottom:18px}
+.m-out-body{font-size:13px;line-height:2.1;white-space:pre-wrap}
+
+/* ── SETUP ── */
+.guide-card{background:white;border:1.5px solid var(--gray-light);border-radius:10px;padding:15px 18px}
+.guide-title{font-size:9px;font-weight:700;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:11px}
+.step{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px}
+.step:last-child{margin-bottom:0}
+.sn{width:18px;height:18px;background:var(--ink);border-radius:50%;color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.sn.rose{background:var(--rose)}
+.sn.green{background:var(--green)}
+.sn.blogger{background:var(--blogger)}
+.st{font-size:11px;color:var(--gray);line-height:1.6}
+.st strong{color:var(--ink)}
+code{font-size:9px;background:var(--gray-light);padding:2px 5px;border-radius:3px;font-family:monospace}
+.earn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.earn-card{background:white;border:1.5px solid var(--gray-light);border-radius:9px;padding:12px 14px;text-align:center}
+.earn-ico{font-size:20px;margin-bottom:5px}
+.earn-name{font-size:10px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.earn-rate{font-size:16px;font-weight:700;color:var(--rose);margin-bottom:3px}
+.earn-desc{font-size:10px;color:var(--gray)}
+
+/* ── COPY BTN ── */
+.copy-btn{background:transparent;border:1.5px solid var(--gray-light);border-radius:7px;padding:6px 12px;font-family:'Noto Sans KR',sans-serif;font-size:10px;font-weight:500;cursor:pointer;color:var(--gray);transition:all .2s;display:none;width:auto}
+.copy-btn:hover{border-color:var(--rose);color:var(--rose)}
+.copy-btn.show{display:block}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:white;padding:9px 15px;border-radius:7px;font-size:11px;opacity:0;transform:translateY(7px);transition:all .3s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateY(0)}
+
+.hl-s{color:var(--gold);font-weight:700;font-family:'Cormorant Garamond',serif}
+.hl-h{color:var(--rose);font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">A<span>more</span> Editor</div>
+  <div class="header-right">
+    <div class="hbadge hb-rose" id="monthBadge"></div>
+    <div class="hbadge hb-blogger">Blogger API ✓</div>
+    <div class="hbadge hb-gray">에딧샵·올영·쿠팡·지그재그</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="sw('general')">✦ 블로그 글 생성</div>
+  <div class="tab" onclick="sw('monthly')">♡ 이달의 추천</div>
+  <div class="tab" onclick="sw('setup')">⚙ 설정 & 가이드</div>
+</div>
+
+<!-- ══ TAB1: 블로그 글 생성 ══ -->
+<div class="tab-content active" id="tab-general">
+  <div class="left">
+    <div><div class="slabel">제품 정보</div>
+      <div style="display:flex;flex-direction:column;gap:11px">
+        <div class="fg"><label>제품명 <em>*</em></label><input id="g-prod" placeholder="예) 설화수 윤조에센스 6세대"/></div>
+        <div class="fg"><label>브랜드</label><input id="g-brand" placeholder="예) 설화수, 헤라, 이니스프리"/></div>
+        <div class="fg"><label>가격</label><input id="g-price" placeholder="예) 78,000원"/></div>
+        <div class="fg"><label>핵심 성분/특징</label><textarea id="g-ing" placeholder="예) 자음단, 5중 히알루론산..."></textarea></div>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <div><div class="slabel">글 설정</div>
+      <div style="display:flex;flex-direction:column;gap:11px">
+        <div class="fg"><label>글 유형</label>
+          <select id="g-type">
+            <option value="review">제품 리뷰</option>
+            <option value="new">신제품 소개</option>
+            <option value="tip">뷰티 팁/튜토리얼</option>
+          </select>
+        </div>
+        <div class="fg"><label>피부 고민</label>
+          <div class="tg" id="skinT">
+            <div class="t" data-v="건조함">건조함</div><div class="t" data-v="모공">모공</div>
+            <div class="t" data-v="칙칙함">칙칙함</div><div class="t" data-v="트러블">트러블</div>
+            <div class="t" data-v="노화/주름">노화/주름</div><div class="t" data-v="탄력">탄력</div>
+            <div class="t" data-v="민감성">민감성</div>
+          </div>
+        </div>
+        <div class="fg"><label>후킹 스타일</label>
+          <div class="tg" id="hookT">
+            <div class="t on" data-v="솔직한 고백">솔직 고백</div>
+            <div class="t" data-v="숫자/비교">숫자 비교</div>
+            <div class="t" data-v="결과 선공개">결과 선공개</div>
+            <div class="t" data-v="의외의 반전">의외 반전</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <!-- 구매 링크 -->
+    <div class="af-box">
+      <div class="af-title">💰 구매 링크 — 있는 것만 넣으세요</div>
+      <div class="af-row"><div class="af-ico ico-edit">에딧</div><input id="g-edit" placeholder="에딧샵 링크 (수수료 최대 25%)"/></div>
+      <div class="af-row"><div class="af-ico ico-oy">OY</div><input id="g-oy" placeholder="올리브영 큐레이터 링크 (7%)"/></div>
+      <div class="af-row"><div class="af-ico ico-cp">CP</div><input id="g-cp" placeholder="쿠팡 파트너스 링크 (3%)"/></div>
+      <div class="af-row"><div class="af-ico ico-zz">ZZ</div><input id="g-zz" placeholder="지그재그 링크"/></div>
+      <div style="margin-top:10px">
+        <div class="af-title" style="margin-bottom:6px">💸 가격 비교 (입력하면 AI가 추천 문구 생성)</div>
+        <div class="price-row">
+          <div><input class="price-inp" id="p-edit" placeholder="에딧샵"><div class="price-label">에딧샵</div></div>
+          <div><input class="price-inp" id="p-oy" placeholder="올리브영"><div class="price-label">올리브영</div></div>
+          <div><input class="price-inp" id="p-cp" placeholder="쿠팡"><div class="price-label">쿠팡</div></div>
+          <div><input class="price-inp" id="p-zz" placeholder="지그재그"><div class="price-label">지그재그</div></div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-rose" onclick="genGeneral()" id="genBtn">✦ 블로그 글 생성하기</button>
+  </div>
+
+  <div class="right">
+    <div class="out-header">
+      <div class="out-title">생성된 콘텐츠</div>
+      <button class="copy-btn" id="cpyG" onclick="copyG()">네이버/티스토리 복사</button>
+    </div>
+    <div id="outG"><div class="ph"><div class="ph-ico">✦</div><p>제품명을 입력하고<br>생성 버튼을 눌러주세요</p></div></div>
+    <div class="upload-area" id="upAreaG">
+      <div class="upload-title">🚀 구글 블로거 자동 업로드</div>
+      <div class="upload-btn-row">
+        <button class="btn btn-blogger" onclick="uploadBlogger('g')" style="flex:2">구글 블로거에 바로 올리기</button>
+        <button class="btn btn-outline btn-sm" onclick="copyG()" style="flex:1">네이버/티스토리 복사</button>
+      </div>
+      <div class="upload-result" id="upResG">
+        <div class="upload-result-title">✓ 블로거 업로드 완료!</div>
+        <a id="upLinkG" href="#" target="_blank">블로거에서 확인하기 →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB2: 이달의 추천 ══ -->
+<div class="tab-content" id="tab-monthly">
+  <div class="left">
+    <div class="m-hero">
+      <div class="m-hero-month" id="heroMonth"></div>
+      <div class="m-hero-title">아모레 에디터의<br>이달의 추천</div>
+      <div class="m-hero-sub">앱 추천 제품 입력 → 내 글로 완성</div>
+    </div>
+    <div><div class="slabel gold">내 블로그 톤</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="fg"><label>글 스타일</label>
+          <div class="tg" id="toneT">
+            <div class="t on" data-v="친근하고 솔직한">친근·솔직</div>
+            <div class="t" data-v="감성적이고 서정적인">감성·서정</div>
+            <div class="t" data-v="전문적이고 정보성">전문·정보</div>
+            <div class="t" data-v="유머러스하고 가벼운">유머·가벼운</div>
+          </div>
+        </div>
+        <div class="fg"><label>자주 쓰는 표현</label><input id="m-expr" placeholder="예) ~했어요, 진짜 대박..."/></div>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <div><div class="slabel gold">앱 추천 제품</div>
+      <div style="display:flex;flex-direction:column;gap:9px" id="mSlots"></div>
+      <button class="add-slot" id="addSlotBtn" onclick="addSlot()">+ 제품 추가 (최대 5개)</button>
+    </div>
+    <button class="btn btn-gold" onclick="genMonthly()" id="mBtn">♡ 이달의 추천 글 생성</button>
+  </div>
+
+  <div class="right">
+    <div class="out-header">
+      <div class="out-title" id="mOutTitle">♡이달의 에디터 추천</div>
+      <button class="copy-btn" id="cpyM" onclick="copyM()">네이버/티스토리 복사</button>
+    </div>
+    <div id="outM"><div class="ph"><div class="ph-ico">♡</div><p>앱 추천 제품을 입력하고<br>생성 버튼을 눌러주세요</p></div></div>
+    <div class="upload-area" id="upAreaM">
+      <div class="upload-title">🚀 구글 블로거 자동 업로드</div>
+      <div class="upload-btn-row">
+        <button class="btn btn-blogger" onclick="uploadBlogger('m')" style="flex:2">구글 블로거에 바로 올리기</button>
+        <button class="btn btn-outline btn-sm" onclick="copyM()" style="flex:1">네이버/티스토리 복사</button>
+      </div>
+      <div class="upload-result" id="upResM">
+        <div class="upload-result-title">✓ 블로거 업로드 완료!</div>
+        <a id="upLinkM" href="#" target="_blank">블로거에서 확인하기 →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TAB3: 설정 & 가이드 ══ -->
+<div class="tab-content" id="tab-setup">
+  <div class="left">
+    <div><div class="slabel blogger">구글 블로거 API 연결</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="fg"><label>Blogger API Key <em>*</em></label><input id="b-key" type="password" placeholder="Google Cloud Console에서 발급"/></div>
+        <div class="fg"><label>Blog ID <em>*</em></label><input id="b-id" placeholder="블로거 설정 > 기본 > Blog ID"/></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px">
+      <button class="btn btn-blogger" onclick="saveSet()" style="flex:1">✓ 저장</button>
+      <button class="btn btn-outline btn-sm" onclick="testBlogger()" style="flex:1" id="testBtn">연결 테스트</button>
+    </div>
+    <div class="blogger-status" id="bloggerStatus">
+      <div class="dot" id="bloggerDot"></div>
+      <span id="bloggerStatusText">저장 후 연결 테스트를 해주세요</span>
+    </div>
+    <div class="hr"></div>
+    <div><div class="slabel">수익 구조 한눈에</div>
+      <div class="earn-row">
+        <div class="earn-card"><div class="earn-ico">🏪</div><div class="earn-name">에딧샵</div><div class="earn-rate">최대 25%</div><div class="earn-desc">아모레 공식</div></div>
+        <div class="earn-card"><div class="earn-ico">🌿</div><div class="earn-name">올영 큐레이터</div><div class="earn-rate">7% / 3%</div><div class="earn-desc">추천/기타 구매</div></div>
+        <div class="earn-card"><div class="earn-ico">🛒</div><div class="earn-name">쿠팡 파트너스</div><div class="earn-rate">최대 3%</div><div class="earn-desc">이미 보유 ✓</div></div>
+        <div class="earn-card"><div class="earn-ico">💗</div><div class="earn-name">지그재그</div><div class="earn-rate">앱 링크</div><div class="earn-desc">이미 보유 ✓</div></div>
+      </div>
+    </div>
+    <div class="hr"></div>
+    <div><div class="slabel">구글 애드센스 현황</div>
+      <div class="earn-card" style="text-align:left;padding:14px 16px">
+        <div style="font-size:11px;line-height:1.8;color:var(--gray)">
+          ✅ 티스토리 아니어도 신청 가능<br>
+          ✅ 구글 블로거 → 가장 빠른 승인<br>
+          ✅ 워드프레스도 가능 (비즈니스 플랜)<br>
+          📋 조건: 글 12~15개 이상, 글당 800자↑<br>
+          💡 이 툴로 글 쌓으면 조건 금방 충족
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="out-title">설정 가이드</div>
+
+    <div class="guide-card">
+      <div class="guide-title">구글 블로거 시작 (무료 · 5분)</div>
+      <div class="step"><div class="sn blogger">1</div><div class="st"><strong>blogger.com</strong> 접속 → 구글 계정으로 로그인</div></div>
+      <div class="step"><div class="sn blogger">2</div><div class="st">새 블로그 만들기 → 주소 설정 (예: amore-editor.blogspot.com)</div></div>
+      <div class="step"><div class="sn blogger">3</div><div class="st"><strong>설정 → 기본</strong> → 블로그 ID 복사 (숫자 코드)</div></div>
+      <div class="step"><div class="sn blogger">4</div><div class="st"><strong>console.cloud.google.com</strong> → 새 프로젝트 → Blogger API 활성화 → API 키 발급</div></div>
+      <div class="step"><div class="sn blogger">5</div><div class="st">위 설정 탭에 Blog ID + API Key 입력 → 저장 → 자동 업로드 가능!</div></div>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-title">구글 블로거 애드센스 연동</div>
+      <div class="step"><div class="sn green">1</div><div class="st">블로거 대시보드 → <strong>수익</strong> 메뉴 → 애드센스 신청</div></div>
+      <div class="step"><div class="sn green">2</div><div class="st">글 12~15개 쌓인 후 신청 (이 툴로 자동 생성하면 금방 채워짐)</div></div>
+      <div class="step"><div class="sn green">3</div><div class="st">승인 후 광고 자동 삽입 → 방문자 발생하면 수익 시작</div></div>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-title">링크 선택 기준</div>
+      <div class="step"><div class="sn rose">1</div><div class="st">아모레 브랜드 제품 → <strong>에딧샵 우선</strong> (수수료 25%로 가장 높음)</div></div>
+      <div class="step"><div class="sn rose">2</div><div class="st">여러 곳에서 팔 때 → <strong>가격 비교란 입력</strong> → AI가 자동으로 "어디가 이득" 문구 생성</div></div>
+      <div class="step"><div class="sn rose">3</div><div class="st">올리브영에만 있는 제품 → <strong>올영 큐레이터</strong> (7%)</div></div>
+      <div class="step"><div class="sn rose">4</div><div class="st">쿠팡에만 있거나 가장 싸면 → <strong>쿠팡 파트너스</strong> (3%)</div></div>
+      <div class="step"><div class="sn rose">5</div><div class="st">지그재그에 있는 뷰티/패션 제품 → <strong>지그재그 링크</strong></div></div>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-title">플랫폼별 업로드 방식</div>
+      <div class="step"><div class="sn blogger">B</div><div class="st"><strong>구글 블로거</strong> — API 자동 업로드 버튼 → 완전 자동</div></div>
+      <div class="step"><div class="sn" style="background:#03C75A">N</div><div class="st"><strong>네이버 블로그</strong> — 복사 버튼 → 붙여넣기</div></div>
+      <div class="step"><div class="sn" style="background:#FF6B35">T</div><div class="st"><strong>티스토리</strong> — 복사 버튼 → 붙여넣기 (API 2024년 종료)</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── INIT ──
+const now = new Date(), month = now.getMonth()+1;
+document.getElementById('monthBadge').textContent = `${month}월 에디터`;
+document.getElementById('heroMonth').textContent = `${month}월 EDITOR'S PICK`;
+document.getElementById('mOutTitle').textContent = `♡${month}월 아모레 에디터 추천`;
+
+// ── SETTINGS ──
+let cfg = JSON.parse(localStorage.getItem('amoreV3')||'{}');
+if(cfg.bkey) document.getElementById('b-key').value = cfg.bkey;
+if(cfg.bid)  document.getElementById('b-id').value  = cfg.bid;
+
+function saveSet(){
+  cfg = {bkey:document.getElementById('b-key').value.trim(), bid:document.getElementById('b-id').value.trim()};
+  localStorage.setItem('amoreV3', JSON.stringify(cfg));
+  toast('설정 저장 완료 ✓');
+}
+async function testBlogger(){
+  if(!cfg.bkey||!cfg.bid){toast('API Key와 Blog ID를 먼저 입력·저장해주세요');return;}
+  const btn=document.getElementById('testBtn'); btn.disabled=true; btn.textContent='테스트 중...';
+  try{
+    const r = await fetch(`https://www.googleapis.com/blogger/v3/blogs/${cfg.bid}?key=${cfg.bkey}`);
+    const d = await r.json();
+    if(d.name){
+      document.getElementById('bloggerDot').classList.add('on');
+      document.getElementById('bloggerStatusText').textContent = `✓ 연결됨: ${d.name}`;
+      toast('✓ 블로거 연결 성공!');
+    } else { toast('연결 실패 - Key/ID 확인해주세요'); }
+  } catch(e){ toast('연결 실패 - Key/ID 확인해주세요'); }
+  btn.disabled=false; btn.textContent='연결 테스트';
+}
+
+// ── TABS ──
+function sw(t){
+  ['general','monthly','setup'].forEach((n,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',n===t);
+    document.getElementById('tab-'+n).classList.toggle('active',n===t);
+  });
+}
+
+// ── TAG TOGGLE ──
+document.querySelectorAll('.tg').forEach(g=>{
+  g.querySelectorAll('.t').forEach(tag=>{
+    tag.addEventListener('click',()=>{
+      if(['hookT','toneT'].includes(g.id)){g.querySelectorAll('.t').forEach(x=>x.classList.remove('on'));tag.classList.add('on');}
+      else tag.classList.toggle('on');
+    });
+  });
+});
+
+// ── SLOTS ──
+let sc=0;
+function addSlot(){
+  if(sc>=5)return; sc++;
+  const id=sc, div=document.createElement('div');
+  div.className='slot'; div.id=`sl-${id}`;
+  div.innerHTML=`<div class="slot-hd"><div class="slot-n">${id}</div><button class="rm" onclick="rmSlot(${id})">×</button></div>
+    <div class="fg" style="margin-bottom:7px"><label>제품명 *</label><input id="mn-${id}" placeholder="예) 헤라 블랙쿠션"/></div>
+    <div class="fg" style="margin-bottom:7px"><label>앱 추천 이유</label><input id="mr-${id}" placeholder="예) 이달 신제품, 베스트셀러"/></div>
+    <div class="fg" style="margin-bottom:7px"><label>내 한줄 느낌</label><textarea class="sm" id="mm-${id}" placeholder="예) 써봤는데 지속력 진짜..."></textarea></div>
+    <div class="af-box" style="padding:10px 12px">
+      <div class="af-title" style="margin-bottom:7px">구매 링크</div>
+      <div class="af-row"><div class="af-ico ico-edit" style="font-size:9px">에딧</div><input id="me-${id}" placeholder="에딧샵 링크"/></div>
+      <div class="af-row"><div class="af-ico ico-oy">OY</div><input id="mo-${id}" placeholder="올리브영 링크"/></div>
+      <div class="af-row"><div class="af-ico ico-cp">CP</div><input id="mc-${id}" placeholder="쿠팡 링크"/></div>
+      <div class="af-row"><div class="af-ico ico-zz">ZZ</div><input id="mz-${id}" placeholder="지그재그 링크"/></div>
+    </div>`;
+  document.getElementById('mSlots').appendChild(div);
+  if(sc>=5) document.getElementById('addSlotBtn').style.display='none';
+}
+function rmSlot(id){ document.getElementById(`sl-${id}`).remove(); sc--; document.getElementById('addSlotBtn').style.display='block'; document.querySelectorAll('.slot-n').forEach((e,i)=>e.textContent=i+1); }
+addSlot(); addSlot();
+
+// ── PRICE COMPARE ──
+function buildPriceText(){
+  const vals=[
+    {name:'에딧샵', val:document.getElementById('p-edit').value.trim()},
+    {name:'올리브영', val:document.getElementById('p-oy').value.trim()},
+    {name:'쿠팡', val:document.getElementById('p-cp').value.trim()},
+    {name:'지그재그', val:document.getElementById('p-zz').value.trim()},
+  ].filter(x=>x.val);
+  if(!vals.length) return '';
+  const nums = vals.map(x=>({...x, n:parseInt(x.val.replace(/[^0-9]/g,''))||0}));
+  const cheapest = nums.reduce((a,b)=>a.n<b.n?a:b);
+  return `[가격비교] ${nums.map(x=>`${x.name} ${x.val}`).join(' / ')} → 현재 ${cheapest.name}이 가장 저렴합니다. ${cheapest.name} 링크 추천!`;
+}
+
+// ── BUILD LINKS HTML ──
+function linksHTML(e,o,c,z){
+  let h='';
+  if(e) h+=`\n🏪 에딧샵에서 구매 → ${e}`;
+  if(o) h+=`\n🌿 올리브영에서 구매 → ${o}`;
+  if(c) h+=`\n🛒 쿠팡에서 구매 → ${c}`;
+  if(z) h+=`\n💗 지그재그에서 구매 → ${z}`;
+  return h;
+}
+
+// ── GENERATE GENERAL ──
+let gData=null, gTitle='';
+async function genGeneral(){
+  const prod=document.getElementById('g-prod').value.trim();
+  if(!prod){toast('제품명을 입력해주세요!');return;}
+  const brand=document.getElementById('g-brand').value.trim();
+  const price=document.getElementById('g-price').value.trim();
+  const ing=document.getElementById('g-ing').value.trim();
+  const type=document.getElementById('g-type').value;
+  const skin=[...document.querySelectorAll('#skinT .t.on')].map(t=>t.dataset.v).join(', ')||'전반적인 피부 케어';
+  const hook=document.querySelector('#hookT .t.on')?.dataset.v||'솔직한 고백';
+  const typeL={review:'제품 리뷰',new:'신제품 소개',tip:'뷰티 팁/튜토리얼'}[type];
+  const priceComp=buildPriceText();
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true; btn.textContent='생성 중...';
+  document.getElementById('cpyG').classList.remove('show');
+  document.getElementById('upAreaG').classList.remove('show');
+  document.getElementById('outG').innerHTML=`<div class="loading on"><div class="spinner"></div><p>2026 트렌드에 맞게 작성 중...</p></div>`;
+
+  const prompt=`당신은 아모레퍼시픽 공식 뷰티 에디터입니다. 구글 블로거 + 네이버 블로그용 SEO 최적화 뷰티 글을 작성하세요.
+[제품] ${prod} / ${brand||'아모레퍼시픽'} / ${price||''} / 성분: ${ing||'고기능성'}
+[글설정] ${typeL} / 피부고민: ${skin} / 후킹: ${hook}
+${priceComp?`[가격비교정보] ${priceComp}`:''}
+[필수반영] 2026트렌드(성분소비자언어번역, 스키니멀리즘, 나에게맞는가관점), 구글SEO(소제목활용, 1500자이상), 가격이득정보 자연스럽게 녹이기, 구매CTA
+[본문구조] 공감오프닝→제품소개→성분쉬운설명→실사용후기→추천/비추→가격솔직평가→구매CTA
+[제목5개] ${hook}스타일, 각각 다른각도, SEO키워드포함
+반드시 JSON만: {"titles":["제목1","제목2","제목3","제목4","제목5"],"body":"본문(줄바꿈\\n, 1500자이상)","seoTags":["태그1","태그2","태그3","태그4","태그5","태그6","태그7","태그8"]}`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    const txt=d.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
+    gData=JSON.parse(txt); gTitle=gData.titles[0];
+    renderG(gData);
+  } catch(e){
+    document.getElementById('outG').innerHTML=`<div class="ph"><div class="ph-ico">⚠</div><p>오류 발생. 다시 시도해주세요.</p></div>`;
+  }
+  btn.disabled=false; btn.textContent='✦ 블로그 글 생성하기';
+}
+
+function renderG(d){
+  const tH=d.titles.map((t,i)=>`<div class="title-card ${i===0?'sel':''}" onclick="pickT(this,'${t.replace(/'/g,"\\'")}','g')">${t}<span class="pick">PICK ✓</span></div>`).join('');
+  const tagH=d.seoTags.map(t=>`<span class="seo-t">#${t}</span>`).join('');
+  document.getElementById('outG').innerHTML=`
+    <div><div class="mlabel rose">✦ 후킹 제목 5선</div>${tH}</div>
+    <div><div class="mlabel rose" style="margin-bottom:8px">✦ 본문</div><div class="content-box" id="bodyG">${fmt(d.body)}</div></div>
+    <div><div class="mlabel rose" style="margin-bottom:7px">✦ SEO 태그</div><div class="seo-wrap">${tagH}</div></div>`;
+  document.getElementById('cpyG').classList.add('show');
+  document.getElementById('upAreaG').classList.add('show');
+  document.getElementById('upResG').classList.remove('show');
+}
+
+// ── GENERATE MONTHLY ──
+let mData=null, mTitle='';
+async function genMonthly(){
+  const slots=document.querySelectorAll('.slot');
+  if(!slots.length){toast('제품을 최소 1개 입력해주세요!');return;}
+  const prods=[]; let ok=true;
+  slots.forEach(s=>{
+    const id=s.id.replace('sl-','');
+    const name=document.getElementById(`mn-${id}`)?.value.trim();
+    if(!name){ok=false;return;}
+    prods.push({name, reason:document.getElementById(`mr-${id}`)?.value.trim()||'앱추천', memo:document.getElementById(`mm-${id}`)?.value.trim()||'',
+      edit:document.getElementById(`me-${id}`)?.value.trim(), oy:document.getElementById(`mo-${id}`)?.value.trim(),
+      cp:document.getElementById(`mc-${id}`)?.value.trim(), zz:document.getElementById(`mz-${id}`)?.value.trim()});
+  });
+  if(!ok){toast('제품명을 입력해주세요!');return;}
+  const tone=document.querySelector('#toneT .t.on')?.dataset.v||'친근하고 솔직한';
+  const expr=document.getElementById('m-expr').value.trim();
+  const btn=document.getElementById('mBtn'); btn.disabled=true; btn.textContent='생성 중...';
+  document.getElementById('cpyM').classList.remove('show');
+  document.getElementById('upAreaM').classList.remove('show');
+  document.getElementById('outM').innerHTML=`<div class="loading on"><div class="spinner"></div><p>♡${month}월 추천 글 완성 중...</p></div>`;
+
+  // 특수문자 안전 처리
+  const safe = s => (s||'').replace(/[\\"]/g,' ').replace(/[\r\n]+/g,' ').trim();
+  const pList=prods.map((p,i)=>`${i+1}. ${safe(p.name)} | 추천이유: ${safe(p.reason)} | 내느낌: ${safe(p.memo)||'없음'}`).join('\n');
+  const prompt=`당신은 아모레퍼시픽 뷰티 에디터입니다. 매달 1일 "♡${month}월 아모레 에디터 추천" 특집 글 작성.
+[톤] ${tone} / 표현: ${expr||'자연스럽게'}
+[제품]\n${pList}
+[규칙] ${month}월 계절감 오프닝, 각 제품(추천이유→성분쉬운설명→내느낌→이런분추천→구매링크자리표시[LINK_N]), 이달총평+다음달예고, ${tone}톤일관, 2026트렌드, 1500자이상, 제목3개(♡${month}월포함)
+반드시 JSON만 응답. 다른 텍스트 없이: {"titles":["제목1","제목2","제목3"],"body":"본문(줄바꿈은 \\n 사용)","seoTags":["태그1","태그2","태그3","태그4","태그5","태그6"]}`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    let txt=d.content.map(i=>i.text||'').join('');
+    // JSON 추출 강화
+    const match = txt.match(/\{[\s\S]*\}/);
+    txt = match ? match[0] : txt.replace(/```json|```/g,'').trim();
+    mData=JSON.parse(txt);
+    // 링크 삽입
+    prods.forEach((p,i)=>{
+      const lh=linksHTML(p.edit,p.oy,p.cp,p.zz);
+      mData.body=mData.body.replace(`[LINK_${i+1}]`, lh||'');
+    });
+    mTitle=mData.titles[0]; renderM(mData);
+  } catch(e){ document.getElementById('outM').innerHTML=`<div class="ph"><div class="ph-ico">⚠</div><p>오류 발생. 다시 시도해주세요.</p></div>`; }
+  btn.disabled=false; btn.textContent='♡ 이달의 추천 글 생성';
+}
+
+function renderM(d){
+  const tH=d.titles.map((t,i)=>`<div class="title-card ${i===0?'sel':''}" onclick="pickT(this,'${t.replace(/'/g,"\\'")}','m')">${t}<span class="pick">PICK ✓</span></div>`).join('');
+  const tagH=d.seoTags.map(t=>`<span class="seo-t">#${t}</span>`).join('');
+  document.getElementById('outM').innerHTML=`
+    <div><div class="mlabel gold">♡ 제목 3선</div>${tH}</div>
+    <div class="m-out"><div class="m-out-hd">♡${month}월 아모레 에디터 추천</div><div class="m-out-sub">${now.getFullYear()}년 ${month}월 1일 발행용</div><div class="m-out-body" id="bodyM">${fmt(d.body)}</div></div>
+    <div><div class="mlabel gold" style="margin-bottom:7px">♡ SEO 태그</div><div class="seo-wrap">${tagH}</div></div>`;
+  document.getElementById('cpyM').classList.add('show');
+  document.getElementById('upAreaM').classList.add('show');
+  document.getElementById('upResM').classList.remove('show');
+}
+
+// ── BLOGGER UPLOAD ──
+async function uploadBlogger(tab){
+  if(!cfg.bkey||!cfg.bid){toast('⚙ 설정 탭에서 Blogger API Key/Blog ID를 먼저 입력해주세요!');sw('setup');return;}
+  const isG=tab==='g', data=isG?gData:mData, title=isG?gTitle:mTitle;
+  if(!data){toast('글을 먼저 생성해주세요!');return;}
+  let body=data.body;
+  if(isG){
+    const lh=linksHTML(document.getElementById('g-edit').value.trim(), document.getElementById('g-oy').value.trim(), document.getElementById('g-cp').value.trim(), document.getElementById('g-zz').value.trim());
+    if(lh) body+='\n\n---\n📦 구매처'+lh;
+  }
+  const tags=data.seoTags?.join(',')||'';
+  const resId=isG?'upResG':'upResM', linkId=isG?'upLinkG':'upLinkM';
+  const upBtn=event.target; upBtn.disabled=true; upBtn.textContent='업로드 중...';
+  try{
+    const r=await fetch(`https://www.googleapis.com/blogger/v3/blogs/${cfg.bid}/posts?key=${cfg.bkey}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({kind:'blogger#post',title:title,content:body.replace(/\n/g,'<br>'),labels:tags.split(',')})
+    });
+    const result=await r.json();
+    if(result.url){
+      document.getElementById(resId).classList.add('show');
+      document.getElementById(linkId).href=result.url;
+      document.getElementById(linkId).textContent=result.url+' →';
+      toast('✓ 구글 블로거 업로드 완료!');
+    } else { toast('업로드 실패 - API Key/Blog ID 확인해주세요'); }
+  } catch(e){ toast('업로드 실패 - 설정을 확인해주세요'); }
+  upBtn.disabled=false; upBtn.textContent='구글 블로거에 바로 올리기';
+}
+
+// ── UTILS ──
+function pickT(el,t,tp){
+  el.closest('.right').querySelectorAll('.title-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  if(tp==='g') gTitle=t; else mTitle=t;
+}
+function copyG(){
+  const b=document.getElementById('bodyG'); if(!b)return;
+  const tags=[...document.querySelectorAll('#outG .seo-t')].map(t=>t.textContent).join(' ');
+  navigator.clipboard.writeText(`제목: ${gTitle}\n\n${b.innerText}\n\n${tags}`).then(()=>toast('복사 완료 ✓'));
+}
+function copyM(){
+  const b=document.getElementById('bodyM'); if(!b)return;
+  const tags=[...document.querySelectorAll('#outM .seo-t')].map(t=>t.textContent).join(' ');
+  navigator.clipboard.writeText(`제목: ${mTitle}\n\n${b.innerText}\n\n${tags}`).then(()=>toast('복사 완료 ✓'));
+}
+function fmt(t){ return t.replace(/\n/g,'<br>').replace(/【(.+?)】/g,'<span class="hl-s">【$1】</span>').replace(/★(.+?)★/g,'<span class="hl-h">$1</span>'); }
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2500); }
+</script>
+</body>
+</html>
